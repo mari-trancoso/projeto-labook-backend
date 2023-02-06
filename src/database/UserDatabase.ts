@@ -11,7 +11,7 @@ export class UserDatabase extends BaseDatabase{
             .insert(parameter)
     }
 
-    async findUser(parameter: string | undefined): Promise <UserDB[]> {
+    public async findUser(parameter: string | undefined): Promise <UserDB[]> {
         let result
     
         if (parameter) {
@@ -30,26 +30,13 @@ export class UserDatabase extends BaseDatabase{
         return result
       }
 
-      private async checkUser(
-        email?: string,
-        password?: string
-      ): Promise <void> {
-        //Poderia ser utilizado o orWhere, porém defini como estratégia um envio mais objetivo do motivo do erro.
+      public async checkUser(email: string, password: string){
         if (email) {
-          const [usersDB]: UserDB[] = await BaseDatabase.connection(
+          const usersDB: UserDB[] = await BaseDatabase.connection(
             UserDatabase.TABLE_USERS
-          ).where({ email: email })
-          if (usersDB) {
-            throw new Error("'email' já cadastrado.")
-          }
+          ).where({ email: email , password: password})
+          return usersDB
         }
-        if (password) {
-            const [usersDB]: UserDB[] = await BaseDatabase.connection(
-              UserDatabase.TABLE_USERS
-            ).where({ email: email })
-            if (usersDB) {
-              throw new Error("'email' já cadastrado.")
-            }
-          }
+        
       }
 }
