@@ -3,6 +3,8 @@ import cors from 'cors'
 import { CreateUserDTO, UserDB } from './types'
 import { UserDatabase } from './database/UserDatabase'
 import { User } from './models/User'
+import { PostsDatabase } from './database/PostsDatabase'
+import { Post } from './models/Post'
 
 const app = express()
 
@@ -158,7 +160,17 @@ app.post("/users/login", async (req: Request, res: Response) => {
             throw new Error("'password' deve ser string")
         }
   
-  
+        const checkUser = await userDBInstance.checkUser(email, password)
+
+        if(checkUser?.length === 0){
+            res.status(400)
+            throw new Error("usuario não cadastrado")
+        } 
+
+        res.status(200).send({
+            message: "Login feito com sucesso!",
+            checkUser
+        })
         
     } catch (error) {
         console.log(error)
@@ -174,3 +186,32 @@ app.post("/users/login", async (req: Request, res: Response) => {
         }
     }
 })
+
+// app.get("/posts/:id", async (req: Request, res: Response) => {
+//     try {
+
+//         const id = req.params.id
+
+//         const postsDatabase = new PostsDatabase()
+//         const postsDB = await postsDatabase.findPostsById(id)
+
+//         if (!postsDB) {
+//             res.status(404)
+//             throw new Error("'id' não encontrado")
+//         }
+
+        
+//     } catch (error) {
+//         console.log(error)
+
+//         if (req.statusCode === 200) {
+//             res.status(500)
+//         }
+
+//         if (error instanceof Error) {
+//             res.send(error.message)
+//         } else {
+//             res.send("Erro inesperado")
+//         }
+//     }
+// })
