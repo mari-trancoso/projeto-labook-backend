@@ -5,6 +5,7 @@ import { UserDatabase } from './database/UserDatabase'
 import { User } from './models/User'
 import { PostsDatabase } from './database/PostsDatabase'
 import { Post } from './models/Post'
+import { BaseDatabase } from './database/BaseDatabase'
 
 const app = express()
 
@@ -33,6 +34,8 @@ app.get("/ping", async (req: Request, res: Response) => {
     }
 })
 
+
+//-----------------------------------SIGN UP
 app.post("/users/signup", async (req: Request, res: Response) => {
     try {
         const { id, name, email, password, role } = req.body as CreateUserDTO
@@ -110,6 +113,8 @@ app.post("/users/signup", async (req: Request, res: Response) => {
     }
 })
 
+
+//-----------------------------------GET ALL USERS
 app.get("/users", async (req: Request, res: Response) => {
     try {
         const name = req.query.name as string | undefined
@@ -145,6 +150,8 @@ app.get("/users", async (req: Request, res: Response) => {
     }
 })
 
+
+//-----------------------------------LOGIN
 app.post("/users/login", async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body as CreateUserDTO
@@ -187,31 +194,53 @@ app.post("/users/login", async (req: Request, res: Response) => {
     }
 })
 
-// app.get("/posts/:id", async (req: Request, res: Response) => {
-//     try {
 
-//         const id = req.params.id
+//-----------------------------------GET ALL POSTS
+app.get("/posts", async (req: Request, res: Response) => {
+    try {
 
-//         const postsDatabase = new PostsDatabase()
-//         const postsDB = await postsDatabase.findPostsById(id)
+        const postsDatabase = new PostsDatabase()
+        const postsDB = await postsDatabase.getAllPosts()
+        const usersDB = await postsDatabase.getPostsAndCreator()
 
-//         if (!postsDB) {
-//             res.status(404)
-//             throw new Error("'id' não encontrado")
-//         }
+        const posts = postsDB.map((postDB) => {
+            return {
+                id: postDB.id,
+                content: postDB.content,
+                likes: postDB.likes,
+                dislikes: postDB.dislikes,
+                createdAt: postDB.created_at,
+                updatedAt: postDB.updated_at,
+                creator: getCreator(postDB.creator_id)
+            }
+        })
 
-        
-//     } catch (error) {
-//         console.log(error)
+        function getCreator(creatorId: string) {
 
-//         if (req.statusCode === 200) {
-//             res.status(500)
-//         }
+            const creator = usersDB.usersDB.find((userDB) => {
+                return userDB.id === creatorId
+            })
 
-//         if (error instanceof Error) {
-//             res.send(error.message)
-//         } else {
-//             res.send("Erro inesperado")
-//         }
-//     }
-// })
+            return {
+                id: creator.id,
+                name: creator.name
+            }
+        }
+
+        res.status(200).send(posts)
+
+    } catch (error) {
+        console.log(error)
+
+        if (req.statusCode === 200) {
+            res.status(500)
+        }
+
+        if (error instanceof Error) {
+            res.send(error.message)
+        } else {
+            res.send("Erro inesperado")
+        }
+    }
+})
+
