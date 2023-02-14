@@ -311,3 +311,45 @@ app.post("/posts", async (req: Request, res: Response) => {
         }
     }
 })
+
+
+//-----------------------------------EDIT POST
+app.put("/posts/:id", async(req: Request, res:Response) => {
+    try{
+        const id = req.params.id
+        const content = req.body.content
+
+        if (typeof content !== "string") {
+            res.status(400)
+            throw new Error("'content' deve ser string.")
+        }
+
+        const postsDatabase = new PostsDatabase()
+        const postDB = await postsDatabase.findPostsById(id)
+
+        if (!postDB) {
+            res.status(404)
+            throw new Error("'id' não encontrado")
+        }
+
+        // const newContent = account.getBalance() + value
+        // account.setBalance(newBalance)
+
+        await postsDatabase.updatePostById(id, content)
+
+        res.status(200).send("conteudo mudado")
+
+    }catch(error){
+        console.log(error)
+
+        if (req.statusCode === 200) {
+            res.status(500)
+        }
+
+        if (error instanceof Error) {
+            res.send(error.message)
+        } else {
+            res.send("Erro inesperado")
+        }
+    }
+})

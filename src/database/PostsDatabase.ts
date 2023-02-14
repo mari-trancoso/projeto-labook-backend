@@ -44,6 +44,13 @@ export class PostsDatabase extends BaseDatabase{
             .insert(parameter)
     }
 
+    public async updatePostById(id: string, newContent: string) {
+        await BaseDatabase
+            .connection(PostsDatabase.TABLE_POSTS)
+            .update({ content: newContent, updated_at: new Date().toISOString() })
+            .where({ id })
+    }
+
 }
 
 
