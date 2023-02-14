@@ -25,3 +25,10 @@ export interface PostsDB {
     updated_at: string
 }
 
+export interface CreatePost {
+    id: string,
+    creator_id: string,
+    content: string,
+    created_at: string
+}
+
