@@ -1,3 +1,4 @@
+import { Post } from "../models/Post";
 import { PostsDB } from "../types";
 import { BaseDatabase } from "./BaseDatabase";
 import { UserDatabase } from "./UserDatabase";
@@ -35,6 +36,12 @@ export class PostsDatabase extends BaseDatabase{
             postsDB,
             usersDB
         }
+    }
+
+    public async insertPost(parameter: Post ) {
+        await BaseDatabase
+            .connection(PostsDatabase.TABLE_POSTS)
+            .insert(parameter)
     }
 
 }

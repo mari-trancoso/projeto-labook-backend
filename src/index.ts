@@ -1,11 +1,10 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
-import { CreateUserDTO, UserDB } from './types'
+import { CreateUserDTO, PostsDB, UserDB } from './types'
 import { UserDatabase } from './database/UserDatabase'
 import { User } from './models/User'
 import { PostsDatabase } from './database/PostsDatabase'
 import { Post } from './models/Post'
-import { BaseDatabase } from './database/BaseDatabase'
 
 const app = express()
 
@@ -244,3 +243,71 @@ app.get("/posts", async (req: Request, res: Response) => {
     }
 })
 
+
+//-----------------------------------CREATE POST
+app.post("/posts", async (req: Request, res: Response) => {
+    try{
+        const {id, content, creator_id } = req.body
+
+        if(id !== undefined){
+            if (typeof id !== "string") {
+                res.status(400)
+                throw new Error("'id' deve ser string")
+            }
+        }
+
+        if(content !== undefined){
+            if (typeof content !== "string") {
+                res.status(400)
+                throw new Error("'content' deve ser string")
+            }
+        }
+
+        if(creator_id !== undefined){
+            if (typeof creator_id !== "string") {
+                res.status(400)
+                throw new Error("'creator_id' deve ser string")
+            }
+        }
+
+        const postInstance = new Post(
+            id,
+            creator_id,
+            content,
+            0,
+            0,
+            new Date().toISOString(),
+            new Date().toISOString()
+        )
+
+        //pode fazer como um dto
+        const newPostDB: PostsDB = {
+          id: postInstance.getId(),
+          creator_id: postInstance.getCreatorId(),
+          content: postInstance.getContent(),
+          likes: postInstance.getLikes(),
+          dislikes: postInstance.getDislikes(),
+          created_at: postInstance.getCreatedAt(),
+          updated_at: postInstance.getUpdatedAt()
+        }
+
+        const postDBInstance = new PostsDatabase()
+        await postDBInstance.insertPost(postInstance)
+  
+        res.status(201).send(newPostDB)
+
+
+    } catch (error){
+        console.log(error)
+
+        if (req.statusCode === 200) {
+            res.status(500)
+        }
+
+        if (error instanceof Error) {
+            res.send(error.message)
+        } else {
+            res.send("Erro inesperado")
+        }
+    }
+})
