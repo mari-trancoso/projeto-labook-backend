@@ -55,4 +55,5 @@ export class User {
     setCreatedAt(value: string): void {
         this.created_at = value
     }
+
 }
