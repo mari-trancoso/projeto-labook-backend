@@ -353,3 +353,39 @@ app.put("/posts/:id", async(req: Request, res:Response) => {
         }
     }
 })
+
+
+//-----------------------------------DELETE POST
+app.delete("/posts/:id", async(req: Request, res:Response) => {
+    try{
+        const id = req.params.id
+
+        const postsDatabase = new PostsDatabase()
+        const postDB = await postsDatabase.findPostsById(id)
+
+        if (!postDB) {
+            res.status(404)
+            throw new Error("'id' não encontrado")
+        }
+
+        // const newContent = account.getBalance() + value
+        // account.setBalance(newBalance)
+
+        await postsDatabase.deletePostById(id)
+
+        res.status(200).send("post deletado.")
+
+    }catch(error){
+        console.log(error)
+
+        if (req.statusCode === 200) {
+            res.status(500)
+        }
+
+        if (error instanceof Error) {
+            res.send(error.message)
+        } else {
+            res.send("Erro inesperado")
+        }
+    }
+})
