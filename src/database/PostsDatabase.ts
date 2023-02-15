@@ -51,6 +51,13 @@ export class PostsDatabase extends BaseDatabase{
             .where({ id })
     }
 
+    public async deletePostById(id: string) {
+        await BaseDatabase
+            .connection(PostsDatabase.TABLE_POSTS)
+            .delete()
+            .where({ id })
+    }
+
 }
 
 
