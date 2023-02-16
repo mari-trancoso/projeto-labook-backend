@@ -1,10 +1,12 @@
+import { USER_ROLES } from "../types"
+
 export class User {
     constructor(
         private id: string,
         private name: string,
         private email: string,
         private password: string,
-        private role: string,
+        private role: USER_ROLES,
         private created_at: string,
     ) {}
 
@@ -40,11 +42,11 @@ export class User {
         this.password = value
     }
 
-    getRole(): string {
+    getRole(): USER_ROLES {
         return this.role
     }
 
-    setRole(value: string): void {
+    setRole(value: USER_ROLES): void {
         this.role = value
     }
 

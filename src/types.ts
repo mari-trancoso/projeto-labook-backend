@@ -1,9 +1,14 @@
+export enum USER_ROLES {
+    NORMAL = "NORMAL",
+    ADMIN = "ADMIN"
+}
+
 export interface UserDB {
     id: string,
     name: string,
     email: string,
     password: string,
-    role: string,
+    role: USER_ROLES,
     created_at: string
 }
 
@@ -12,7 +17,7 @@ export interface CreateUserDTO {
     name: string,
     email:string,
     password:string,
-    role: string
+    role: USER_ROLES
 }
 
 export interface PostsDB {
