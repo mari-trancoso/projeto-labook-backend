@@ -15,22 +15,28 @@ CREATE TABLE posts (
     likes INTEGER DEFAULT (0) NOT NULL,
     dislikes INTEGER DEFAULT (0) NOT NULL,
     created_at TEXT DEFAULT (DATETIME()) NOT NULL,
-    updated_at TEXT NOT NULL,
+    updated_at TEXT DEFAULT (DATETIME()) NOT NULL,
     FOREIGN KEY (creator_id) REFERENCES users (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE likes_dislikes (
     user_id TEXT NOT NULL,
     post_id TEXT NOT NULL,
     like INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     FOREIGN KEY (post_id) REFERENCES posts (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 INSERT INTO users (id, name, email, password, role)
 VALUES 
-    ("u001", "Mariana", "mari@email.com", "Mari123@", "normal"), 
-    ("u002", "Paulo", "paulo@email.com", "Paulo123@", "normal");
+    ("u001", "Mariana", "mari@email.com", "Mari123@", "NORMAL"), 
+    ("u002", "Paulo", "paulo@email.com", "Paulo123@", "NORMAL");
 
 INSERT INTO posts (id, creator_id, content, likes, dislikes, updated_at)
 VALUES 
