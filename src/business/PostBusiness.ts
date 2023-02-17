@@ -2,11 +2,13 @@ import { PostsDatabase } from "../database/PostsDatabase";
 import { BadRequestError } from "../error/BadRequestError";
 import { NotFoundError } from "../error/NotFoundError";
 import { Post } from "../models/Post";
+import { IdGenerator } from "../services/IdGenerator";
 import { PostsDB } from "../types";
 
 export class PostBusiness {
     constructor(
-        private postDatabase: PostsDatabase
+        private postDatabase: PostsDatabase,
+        private idGenerator: IdGenerator
     ) { }
 
     public getPosts = async () => {
@@ -42,13 +44,8 @@ export class PostBusiness {
     }
 
     public createPost = async (input : any) => {
-        const { id, content, creator_id } = input
-
-        if(id !== undefined){
-            if (typeof id !== "string") {
-                throw new BadRequestError("'id' deve ser string")
-            }
-        }
+        const id = this.idGenerator.generate()
+        const { content, creator_id } = input
 
         if(content !== undefined){
             if (typeof content !== "string") {
