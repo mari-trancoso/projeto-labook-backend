@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import { PostBusiness } from "../business/PostBusiness"
 import { PostsDatabase } from "../database/PostsDatabase"
+import { CreatePostInputDTO, DeletePostInputDTO, EditPostInputDTO, GetPostsInputDTO } from "../dto/postDTO"
 import { BaseError } from "../error/BaseError"
 import { Post } from "../models/Post"
 import { PostsDB } from "../types"
@@ -12,7 +13,11 @@ export class PostController {
 
     public getPosts = async (req: Request, res: Response) => {
         try {
-            const output = await this.postBusiness.getPosts()
+            const input: GetPostsInputDTO = {
+                token: req.headers.authorization
+            }
+
+            const output = await this.postBusiness.getPosts(input)
     
             res.status(200).send(output)
     
@@ -28,10 +33,10 @@ export class PostController {
 
     public createPost = async (req: Request, res: Response) => {
         try{
-            const input = {
-                id: req.body.id,
-                content: req.body.content,
-                creator_id: req.body.creator_id,
+
+            const input: CreatePostInputDTO = {
+                token: req.headers.authorization,
+                content: req.body.content
             }
 
             const output = await this.postBusiness.createPost(input)
@@ -51,9 +56,10 @@ export class PostController {
 
     public editPost = async(req: Request, res:Response) => {
         try{
-            const input = {
-                id: req.params.id,
-                content: req.body.content
+            const input: EditPostInputDTO = {
+                idToEdit: req.params.id,
+                content: req.body.content,
+                token: req.headers.authorization
             }
             
             const output = await this.postBusiness.editPost(input)
@@ -72,8 +78,9 @@ export class PostController {
 
     public deletePost = async(req: Request, res:Response) => {
         try{
-            const input = {
-                id: req.params.id
+            const input: DeletePostInputDTO = {
+                idToDelete: req.params.id,
+                token: req.headers.authorization
             }
             
             const output = await this.postBusiness.deletePost(input)
