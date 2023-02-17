@@ -1,43 +1,19 @@
 import { Request, Response } from "express"
+import { PostBusiness } from "../business/PostBusiness"
 import { PostsDatabase } from "../database/PostsDatabase"
 import { Post } from "../models/Post"
 import { PostsDB } from "../types"
 
 export class PostController {
-    constructor(){}
+    constructor(
+        private postBusiness : PostBusiness
+    ){}
 
     public getPosts = async (req: Request, res: Response) => {
         try {
+            const output = await this.postBusiness.getPosts()
     
-            const postsDatabase = new PostsDatabase()
-            const postsDB = await postsDatabase.getAllPosts()
-            const usersDB = await postsDatabase.getPostsAndCreator()
-    
-            const posts = postsDB.map((postDB) => {
-                return {
-                    id: postDB.id,
-                    content: postDB.content,
-                    likes: postDB.likes,
-                    dislikes: postDB.dislikes,
-                    createdAt: postDB.created_at,
-                    updatedAt: postDB.updated_at,
-                    creator: getCreator(postDB.creator_id)
-                }
-            })
-    
-            function getCreator(creatorId: string) {
-    
-                const creator = usersDB.usersDB.find((userDB) => {
-                    return userDB.id === creatorId
-                })
-    
-                return {
-                    id: creator.id,
-                    name: creator.name
-                }
-            }
-    
-            res.status(200).send(posts)
+            res.status(200).send(output)
     
         } catch (error) {
             console.log(error)
@@ -56,54 +32,15 @@ export class PostController {
 
     public createPost = async (req: Request, res: Response) => {
         try{
-            const {id, content, creator_id } = req.body
-    
-            if(id !== undefined){
-                if (typeof id !== "string") {
-                    res.status(400)
-                    throw new Error("'id' deve ser string")
-                }
+            const input = {
+                id: req.body.id,
+                content: req.body.content,
+                creator_id: req.body.creator_id,
             }
-    
-            if(content !== undefined){
-                if (typeof content !== "string") {
-                    res.status(400)
-                    throw new Error("'content' deve ser string")
-                }
-            }
-    
-            if(creator_id !== undefined){
-                if (typeof creator_id !== "string") {
-                    res.status(400)
-                    throw new Error("'creator_id' deve ser string")
-                }
-            }
-    
-            const postInstance = new Post(
-                id,
-                creator_id,
-                content,
-                0,
-                0,
-                new Date().toISOString(),
-                new Date().toISOString()
-            )
-    
-            //pode fazer como um dto
-            const newPostDB: PostsDB = {
-              id: postInstance.getId(),
-              creator_id: postInstance.getCreatorId(),
-              content: postInstance.getContent(),
-              likes: postInstance.getLikes(),
-              dislikes: postInstance.getDislikes(),
-              created_at: postInstance.getCreatedAt(),
-              updated_at: postInstance.getUpdatedAt()
-            }
-    
-            const postDBInstance = new PostsDatabase()
-            await postDBInstance.insertPost(postInstance)
+
+            const output = await this.postBusiness.createPost(input)
       
-            res.status(201).send(newPostDB)
+            res.status(201).send(output)
     
     
         } catch (error){
@@ -123,28 +60,14 @@ export class PostController {
 
     public editPost = async(req: Request, res:Response) => {
         try{
-            const id = req.params.id
-            const content = req.body.content
-    
-            if (typeof content !== "string") {
-                res.status(400)
-                throw new Error("'content' deve ser string.")
+            const input = {
+                id: req.params.id,
+                content: req.body.content
             }
+            
+            const output = await this.postBusiness.editPost(input)
     
-            const postsDatabase = new PostsDatabase()
-            const postDB = await postsDatabase.findPostsById(id)
-    
-            if (!postDB) {
-                res.status(404)
-                throw new Error("'id' não encontrado")
-            }
-    
-            // const newContent = account.getBalance() + value
-            // account.setBalance(newBalance)
-    
-            await postsDatabase.updatePostById(id, content)
-    
-            res.status(200).send("conteudo mudado")
+            res.status(200).send(output)
     
         }catch(error){
             console.log(error)
@@ -163,22 +86,12 @@ export class PostController {
 
     public deletePost = async(req: Request, res:Response) => {
         try{
-            const id = req.params.id
-    
-            const postsDatabase = new PostsDatabase()
-            const postDB = await postsDatabase.findPostsById(id)
-    
-            if (!postDB) {
-                res.status(404)
-                throw new Error("'id' não encontrado")
+            const input = {
+                id: req.params.id
             }
-    
-            // const newContent = account.getBalance() + value
-            // account.setBalance(newBalance)
-    
-            await postsDatabase.deletePostById(id)
-    
-            res.status(200).send("post deletado.")
+            
+            const output = await this.postBusiness.deletePost(input)
+            res.status(200).send(output)
     
         }catch(error){
             console.log(error)
