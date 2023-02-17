@@ -2,11 +2,13 @@ import { UserDatabase } from "../database/UserDatabase"
 import { BadRequestError } from "../error/BadRequestError"
 import { NotFoundError } from "../error/NotFoundError"
 import { User } from "../models/User"
+import { IdGenerator } from "../services/IdGenerator"
 import { UserDB, USER_ROLES } from "../types"
 
 export class UserBusiness {
     constructor(
-        private userDatabase: UserDatabase
+        private userDatabase: UserDatabase,
+        private idGenerator: IdGenerator
     ){}
 
     public getUsers = async (input: string | undefined) => {
@@ -34,14 +36,11 @@ export class UserBusiness {
     }
 
     public signup = async (input: any) => {
-      const { id, name, email, password } = input
-      const userDBInstance = new UserDatabase()
 
-      if (id !== undefined) {
-        if (typeof id !== "string") {
-          throw new BadRequestError("'id' deve ser string")
-        }
-      }
+      const id = this.idGenerator.generate()
+
+      const { name, email, password } = input
+      const userDBInstance = new UserDatabase()
 
       if (name !== undefined) {
         if (typeof name !== "string") {
