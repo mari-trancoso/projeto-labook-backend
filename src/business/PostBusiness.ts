@@ -1,4 +1,6 @@
 import { PostsDatabase } from "../database/PostsDatabase";
+import { BadRequestError } from "../error/BadRequestError";
+import { NotFoundError } from "../error/NotFoundError";
 import { Post } from "../models/Post";
 import { PostsDB } from "../types";
 
@@ -44,19 +46,19 @@ export class PostBusiness {
 
         if(id !== undefined){
             if (typeof id !== "string") {
-                throw new Error("'id' deve ser string")
+                throw new BadRequestError("'id' deve ser string")
             }
         }
 
         if(content !== undefined){
             if (typeof content !== "string") {
-                throw new Error("'content' deve ser string")
+                throw new BadRequestError("'content' deve ser string")
             }
         }
 
         if(creator_id !== undefined){
             if (typeof creator_id !== "string") {
-                throw new Error("'creator_id' deve ser string")
+                throw new BadRequestError("'creator_id' deve ser string")
             }
         }
 
@@ -90,13 +92,13 @@ export class PostBusiness {
         const {id, content} = input
 
         if (typeof content !== "string") {
-            throw new Error("'content' deve ser string.")
+            throw new BadRequestError("'content' deve ser string.")
         }
 
         const postDB = await this.postDatabase.findPostsById(id)
 
         if (!postDB) {
-            throw new Error("'id' não encontrado")
+            throw new NotFoundError("'id' não encontrado")
         }
 
         await this.postDatabase.updatePostById(id, content)
@@ -112,7 +114,7 @@ export class PostBusiness {
         const postDB = await this.postDatabase.findPostsById(id)
 
         if (!postDB) {
-            throw new Error("'id' não encontrado")
+            throw new NotFoundError("'id' não encontrado")
         }
 
         await this.postDatabase.deletePostById(id)

@@ -1,4 +1,6 @@
 import { UserDatabase } from "../database/UserDatabase"
+import { BadRequestError } from "../error/BadRequestError"
+import { NotFoundError } from "../error/NotFoundError"
 import { User } from "../models/User"
 import { UserDB, USER_ROLES } from "../types"
 
@@ -11,7 +13,7 @@ export class UserBusiness {
         const name = input
 
         if (typeof name !== "string" && name !== undefined) {
-            throw new Error("'name' deve ser string ou undefined")
+          throw new BadRequestError("'name' deve ser string ou undefined")
         }
 
         const usersDB: UserDB[] = await this.userDatabase.findUser(name)
@@ -37,25 +39,25 @@ export class UserBusiness {
 
       if (id !== undefined) {
         if (typeof id !== "string") {
-          throw new Error("'id' deve ser string")
+          throw new BadRequestError("'id' deve ser string")
         }
       }
 
       if (name !== undefined) {
         if (typeof name !== "string") {
-          throw new Error("'name' deve ser string")
+          throw new BadRequestError("'name' deve ser string")
         }
       }
 
       if (email !== undefined) {
         if (typeof email !== "string") {
-          throw new Error("'email' deve ser string")
+          throw new BadRequestError("'email' deve ser string")
         }
       }
 
       if (password !== undefined) {
         if (typeof password !== "string") {
-          throw new Error("'password' deve ser string")
+          throw new BadRequestError("'password' deve ser string")
         }
       }
 
@@ -95,17 +97,17 @@ export class UserBusiness {
         const userDBInstance = new UserDatabase()
 
         if (typeof email !== "string") {
-            throw new Error("'email' deve ser string")
+          throw new BadRequestError("'email' deve ser string")
         }
 
         if (typeof password !== "string") {
-            throw new Error("'password' deve ser string")
+          throw new BadRequestError("'password' deve ser string")
         }
 
         const checkUser = await userDBInstance.checkUser(email, password)
 
         if (checkUser?.length === 0) {
-            throw new Error("usuario não cadastrado")
+          throw new NotFoundError("usuario não cadastrado")
         } 
 
         const output = {
