@@ -1,14 +1,19 @@
 import { UserDatabase } from "../database/UserDatabase"
+import { LoginInputDTO, LoginOutputDTO } from "../dto/userDTO"
 import { BadRequestError } from "../error/BadRequestError"
 import { NotFoundError } from "../error/NotFoundError"
 import { User } from "../models/User"
+import { HashManager } from "../services/HashManager"
 import { IdGenerator } from "../services/IdGenerator"
+import { TokenManager, TokenPayload } from "../services/TokenManager"
 import { UserDB, USER_ROLES } from "../types"
 
 export class UserBusiness {
     constructor(
         private userDatabase: UserDatabase,
-        private idGenerator: IdGenerator
+        private idGenerator: IdGenerator,
+        private tokenManager: TokenManager,
+        private hashManager: HashManager
     ){}
 
     public getUsers = async (input: string | undefined) => {
@@ -37,8 +42,6 @@ export class UserBusiness {
 
     public signup = async (input: any) => {
 
-      const id = this.idGenerator.generate()
-
       const { name, email, password } = input
       const userDBInstance = new UserDatabase()
 
@@ -60,16 +63,19 @@ export class UserBusiness {
         }
       }
 
+      const id = this.idGenerator.generate()
+      const hashedPassword = await this.hashManager.hash(password)
       const role = USER_ROLES.NORMAL
+      const createdAt = new Date().toISOString()
 
       //Instanciando a classe User, porém passando os valores vindo das requisições e armazenando na variável userInstance.
       const userInstance = new User(
         id,
         name,
         email,
-        password,
+        hashedPassword,
         role,
-        new Date().toISOString()
+        createdAt
       )
 
       //Para demonstrar a criação do usuário, precisamos acessar os valores que estão na classe, porém para acessar os valores na classe só será possível através dos métodos.
@@ -83,37 +89,69 @@ export class UserBusiness {
       }
       await userDBInstance.insertUser(userInstance)
 
+      const payload: TokenPayload = {
+        id: userInstance.getId(),
+        name: userInstance.getName(),
+        role: userInstance.getRole()
+      }
+
+      const token = this.tokenManager.createToken(payload)
+
       const output = {
         message: "Cadastro realizado com sucesso",
-        user: newUserDB
+        token
       }
 
       return (output)
     }
 
-    public login = async (input: any) => {
-        const { email, password } = input
-        const userDBInstance = new UserDatabase()
+    public login = async (input: LoginInputDTO): Promise<LoginOutputDTO> => {
+      const { email, password } = input
 
-        if (typeof email !== "string") {
+      if (typeof email !== "string") {
           throw new BadRequestError("'email' deve ser string")
-        }
+      }
 
-        if (typeof password !== "string") {
+      if (typeof password !== "string") {
           throw new BadRequestError("'password' deve ser string")
-        }
+      }
 
-        const checkUser = await userDBInstance.checkUser(email, password)
+      const userDB: UserDB | undefined = await this.userDatabase.checkEmail(email)
 
-        if (checkUser?.length === 0) {
-          throw new NotFoundError("usuario não cadastrado")
-        } 
+      if (!userDB) {
+          throw new NotFoundError("'email' não cadastrado")
+      }
 
-        const output = {
-            message: "Login realizado com sucesso",
-            user: checkUser
-        }
+      const user = new User(
+          userDB.id,
+          userDB.name,
+          userDB.email,
+          userDB.password,
+          userDB.role,
+          userDB.created_at
+      )
 
-        return (output)
+      const hashedPassword = user.getPassword()
+
+      const isPasswordCorrect = await this.hashManager
+          .compare(password, hashedPassword)
+      
+      if (!isPasswordCorrect) {
+          throw new BadRequestError("'password' incorreto")
+      }
+      
+      const payload: TokenPayload = {
+          id: user.getId(),
+          name: user.getName(),
+          role: user.getRole()
+      }
+
+      const token = this.tokenManager.createToken(payload)
+
+      const output: LoginOutputDTO = {
+          token
+      }
+
+      return output
     }
 }

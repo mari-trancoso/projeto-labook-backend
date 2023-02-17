@@ -1,17 +1,31 @@
 import { PostsDatabase } from "../database/PostsDatabase";
+import { CreatePostInputDTO, GetPostsInputDTO } from "../dto/postDTO";
 import { BadRequestError } from "../error/BadRequestError";
 import { NotFoundError } from "../error/NotFoundError";
 import { Post } from "../models/Post";
 import { IdGenerator } from "../services/IdGenerator";
+import { TokenManager } from "../services/TokenManager";
 import { PostsDB } from "../types";
 
 export class PostBusiness {
     constructor(
         private postDatabase: PostsDatabase,
-        private idGenerator: IdGenerator
+        private idGenerator: IdGenerator,
+        private tokenManager: TokenManager
     ) { }
 
-    public getPosts = async () => {
+    public getPosts = async (input: GetPostsInputDTO) => {
+        const {token} = input
+
+        if (token === undefined) {
+            throw new BadRequestError("token ausente")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null) {
+            throw new BadRequestError("token inválido")
+        }
 
         const postsDB = await this.postDatabase.getAllPosts()
         const usersDB = await this.postDatabase.getPostsAndCreator()
@@ -43,30 +57,37 @@ export class PostBusiness {
         return posts
     }
 
-    public createPost = async (input : any) => {
+    public createPost = async (input : CreatePostInputDTO) => {
+
+        const { token, content } = input
+        
+        if (token === undefined) {
+            throw new BadRequestError("token ausente")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null) {
+            throw new BadRequestError("token inválido")
+        }
+
+        if (typeof content !== "string") {
+            throw new BadRequestError("'name' deve ser string")
+        }
+
         const id = this.idGenerator.generate()
-        const { content, creator_id } = input
-
-        if(content !== undefined){
-            if (typeof content !== "string") {
-                throw new BadRequestError("'content' deve ser string")
-            }
-        }
-
-        if(creator_id !== undefined){
-            if (typeof creator_id !== "string") {
-                throw new BadRequestError("'creator_id' deve ser string")
-            }
-        }
+        const createdAt = new Date().toISOString()
+        const updatedAt = new Date().toISOString()
+        const creatorId = payload.id
 
         const postInstance = new Post(
             id,
-            creator_id,
+            creatorId,
             content,
             0,
             0,
-            new Date().toISOString(),
-            new Date().toISOString()
+            createdAt,
+            updatedAt
         )
 
         const newPostDB: PostsDB = {
@@ -86,19 +107,35 @@ export class PostBusiness {
     }
 
     public editPost = async (input:any) => {
-        const {id, content} = input
+        const { idToEdit, token, content } = input
+
+        if (token === undefined) {
+            throw new BadRequestError("token ausente")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null) {
+            throw new BadRequestError("token inválido")
+        }
 
         if (typeof content !== "string") {
             throw new BadRequestError("'content' deve ser string.")
         }
 
-        const postDB = await this.postDatabase.findPostsById(id)
+        const postDB = await this.postDatabase.findPostsById(idToEdit)
 
         if (!postDB) {
             throw new NotFoundError("'id' não encontrado")
         }
 
-        await this.postDatabase.updatePostById(id, content)
+        const creatorId = payload.id
+
+        if (postDB.creator_id !== creatorId) {
+            throw new BadRequestError("somente quem criou a playlist pode editá-la")
+        }
+
+        await this.postDatabase.updatePostById(idToEdit, content)
 
         const output = "Post editado!"
 
@@ -106,15 +143,32 @@ export class PostBusiness {
     }
 
     public deletePost = async (input : any) => {
-        const {id} = input
+        const { idToDelete, token } = input
+
+        if (token === undefined) {
+            throw new BadRequestError("token ausente")
+        }
+
+        const payload = this.tokenManager.getPayload(token)
+
+        if (payload === null) {
+            throw new BadRequestError("token inválido")
+        }
+
     
-        const postDB = await this.postDatabase.findPostsById(id)
+        const postDB = await this.postDatabase.findPostsById(idToDelete)
 
         if (!postDB) {
             throw new NotFoundError("'id' não encontrado")
         }
 
-        await this.postDatabase.deletePostById(id)
+        const creatorId = payload.id
+
+        if (postDB.creator_id !== creatorId) {
+            throw new BadRequestError("somente quem criou a playlist pode editá-la")
+        }
+
+        await this.postDatabase.deletePostById(idToDelete)
         const output = "Post deletado!"
 
         return output

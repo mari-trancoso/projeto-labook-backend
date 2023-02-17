@@ -30,13 +30,12 @@ export class UserDatabase extends BaseDatabase{
         return result
       }
 
-      public async checkUser(email: string, password: string){
-        if (email) {
-          const usersDB: UserDB[] = await BaseDatabase.connection(
-            UserDatabase.TABLE_USERS
-          ).where({ email: email , password: password})
-          return usersDB
-        }
+      public checkEmail = async (email: string): Promise<UserDB | undefined>  => {
+        const result: UserDB[] = await BaseDatabase
+            .connection(UserDatabase.TABLE_USERS)
+            .select()
+            .where({ email })
         
-      }
+        return result[0]
+    }
 }
